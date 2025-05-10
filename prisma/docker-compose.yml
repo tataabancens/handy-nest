@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  home_services_db:
+    image: postgis/postgis:15-3.3  # Usa la imagen de PostGIS
+    container_name: home_services_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: home_services_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - home_services_network
+
+  prisma-migrate:
+    image: node:20
+    container_name: prisma-migrate
+    depends_on:
+      - home_services_db
+    working_dir: /app
+    volumes:
+      - ../:/app
+    environment:
+      DATABASE_URL: "postgresql://postgres:postgres@home_services_db:5432/home_services_db"
+    entrypoint: [ "sh", "-c", "./prisma/scripts/init_db.sh" ]
+    networks:
+      - home_services_network
+
+volumes:
+  pg_data:
+
+networks:
+  home_services_network:
+    driver: bridge

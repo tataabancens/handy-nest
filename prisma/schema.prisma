@@ -1,0 +1,194 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-arm64-openssl-3.0.x", "darwin-arm64"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Models
+
+// User
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  lastName  String   @map("last_name")
+  email     String   @unique
+  phone     String?
+  password  String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  professional Professional?
+  userRoles    UserRole[]
+  reviewsGiven Review[]
+
+  @@map("user")
+}
+
+// Roles
+model Role {
+  id   Int    @id @default(autoincrement())
+  name String @unique // CLIENT, PROFESSIONAL, ADMIN
+
+  userRoles UserRole[]
+
+  @@map("role")
+}
+
+// Relación User - Role (N:M)
+model UserRole {
+  id     Int @id @default(autoincrement())
+  userId Int @map("user_id")
+  roleId Int @map("role_id")
+
+  user User @relation(fields: [userId], references: [id])
+  role Role @relation(fields: [roleId], references: [id])
+
+  @@unique([userId, roleId])
+  @@map("user_role")
+}
+
+// Professional
+model Professional {
+  id           Int     @id @default(autoincrement())
+  userId       Int     @unique @map("user_id")
+  user         User    @relation(fields: [userId], references: [id])
+  description  String?
+  profileImage String? @map("profile_image")
+  isVerified   Boolean @default(false) @map("is_verified")
+  rating       Float?  @default(0.0)
+
+  location      String
+  latitude      Float?
+  longitude     Float?
+  serviceRadius Int?   @map("service_radius")
+
+  contactWhatsApp String? @map("contact_whatsapp")
+  contactPhone    String? @map("contact_phone")
+  contactEmail    String? @map("contact_email")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  services ProfessionalService[]
+  images   ProfessionalImage[]
+  reviews  Review[]
+  areas    ProfessionalArea[]
+
+  @@map("professional")
+}
+
+model ProfessionalImage {
+  id             Int      @id @default(autoincrement())
+  professionalId Int      @map("professional_id")
+  url            String
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  professional Professional @relation(fields: [professionalId], references: [id])
+
+  @@map("professional_image")
+}
+
+// Category
+model Category {
+  id          Int     @id @default(autoincrement())
+  name        String
+  description String?
+
+  services Service[]
+
+  @@map("category")
+}
+
+// Service
+model Service {
+  id          Int     @id @default(autoincrement())
+  categoryId  Int     @map("category_id")
+  name        String
+  description String?
+
+  category      Category              @relation(fields: [categoryId], references: [id])
+  professionals ProfessionalService[]
+
+  @@map("service")
+}
+
+// Relation Professional - Service (N:M)
+model ProfessionalService {
+  id             Int @id @default(autoincrement())
+  professionalId Int @map("professional_id")
+  serviceId      Int @map("service_id")
+
+  professional Professional @relation(fields: [professionalId], references: [id])
+  service      Service      @relation(fields: [serviceId], references: [id])
+
+  @@unique([professionalId, serviceId])
+  @@map("professional_service")
+}
+
+// Reviews (Reseñas para Profesionales)
+model Review {
+  id             Int      @id @default(autoincrement())
+  reviewerId     Int      @map("reviewer_id")
+  professionalId Int      @map("professional_id")
+  rating         Float
+  comment        String?
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  reviewer     User         @relation(fields: [reviewerId], references: [id])
+  professional Professional @relation(fields: [professionalId], references: [id])
+
+  @@map("review")
+}
+
+model Area {
+  id            Int                     @id @default(autoincrement())
+  nombre        String
+  comuna        Int?
+  perimetro     Float?
+  area          Float?
+  geom          Unsupported("geometry") // Prisma no lo soporta nativamente
+  type          String
+  professionals ProfessionalArea[]
+
+  @@map("areas")
+}
+
+// Relación Professional - Areas (N:M)
+model ProfessionalArea {
+  id             Int @id @default(autoincrement())
+  professionalId Int @map("professional_id")
+  areaId         Int @map("area_id")
+
+  professional Professional @relation(fields: [professionalId], references: [id])
+  area         Area         @relation(fields: [areaId], references: [id])
+
+  @@unique([professionalId, areaId])
+  @@map("professional_area")
+}
+
+// Opcion 2
+
+// El que hace y recibe la reseña es el User y mediante el type se distingue
+
+// model Review {
+//   id          Int      @id @default(autoincrement())
+//   reviewerId  Int      @map("reviewer_id") // Usuario que deja la reseña
+//   targetId    Int      @map("target_id")   // Usuario que recibe la reseña
+//   targetType  String   @map("target_type") // 'professional' o 'client'
+//   rating      Float
+//   comment     String?
+//   createdAt   DateTime @default(now()) @map("created_at")
+
+//   reviewer User @relation("reviews_given", fields: [reviewerId], references: [id])
+//   target   User @relation("reviews_received", fields: [targetId], references: [id])
+
+//   @@map("review")
+// }
