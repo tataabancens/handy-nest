@@ -1,11 +1,12 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { User } from './entities/user.interface';
 import { PrismaClient } from '@prisma/client';
+import { IUserRepository } from './interfaces/user.repository.interface';
 
 @Injectable()
 export class ProdUserRepository
   extends PrismaClient
-  implements OnModuleInit, OnModuleDestroy
+  implements OnModuleInit, OnModuleDestroy, IUserRepository
 {
   constructor() {
     super();

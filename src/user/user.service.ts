@@ -1,12 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { User } from './entities/user.interface';
-import { AbstractUserService } from './interfaces/user.service.interface';
-import { ProdUserRepository } from './prisma-user.repository';
+import { IUserRepository } from './interfaces/user.repository.interface';
+import { IUserService } from './interfaces/user.service.interface';
 
 @Injectable()
-export class UserService extends AbstractUserService {
-  constructor(private userRepository: ProdUserRepository) {
-    super();
+export class UserService implements IUserService {
+  constructor(@Inject(IUserRepository) private userRepository: IUserRepository) {
+
   }
 
   async createUser(createUserDto: User): Promise<User> {

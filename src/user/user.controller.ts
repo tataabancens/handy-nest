@@ -6,16 +6,18 @@ import {
   Param,
   HttpException,
   HttpStatus,
-  ParseIntPipe,
+  ParseIntPipe, Inject,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 import { mapUserDtoToUser } from './mappers/mapUserDtoToUser';
-import { AbstractUserService } from './interfaces/user.service.interface';
+import { IUserService } from './interfaces/user.service.interface';
 
 @Controller('users')
 export class UserController {
-  constructor(private readonly userService: AbstractUserService) {}
+  constructor(@Inject(IUserService) private readonly userService: IUserService) {
+
+  }
 
   @Post()
   async create(@Body() createUserDto: CreateUserDto): Promise<UserResponseDto> {
