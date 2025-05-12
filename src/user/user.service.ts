@@ -5,9 +5,9 @@ import { IUserService } from './interfaces/user.service.interface';
 
 @Injectable()
 export class UserService implements IUserService {
-  constructor(@Inject(IUserRepository) private userRepository: IUserRepository) {
-
-  }
+  constructor(
+    @Inject(IUserRepository) private userRepository: IUserRepository,
+  ) {}
 
   async createUser(createUserDto: User): Promise<User> {
     return this.userRepository.create(createUserDto);

@@ -8,5 +8,4 @@ export interface IUserService {
   // deleteUser(id: number): Promise<void>;
 }
 
-export const IUserService = Symbol("IUserService");
-
+export const IUserService = Symbol('IUserService');
